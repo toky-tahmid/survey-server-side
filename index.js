@@ -7,6 +7,7 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use(express.json());
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.khqul4z.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -24,29 +25,33 @@ async function run() {
     await client.connect();
     const surveyCollection = client.db("survey").collection("allSurveys");
     const userCollection = client.db("survey").collection("users");
+    //jwt
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
+    });
 
     //users data
-
-    app.get('/users', async (req, res) => {
+    app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
-
-    app.patch('/users', async (req, res) => {
-      const role = req.query.role
+    app.patch("/users", async (req, res) => {
+      const role = req.query.role;
       const id = req.query.id;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
           role: role,
-        }
-      }
+        },
+      };
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
-    })
-
-
-    app.post('/users', async (req, res) => {
+    });
+    app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
       res.send(result);
@@ -57,22 +62,36 @@ async function run() {
       const result = await surveyCollection.find().toArray();
       res.send(result);
     });
+    app.get("/allSurveys/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await surveyCollection.findOne(query);
+      res.send(result);
+    });
     app.post("/allSurveys", async (req, res) => {
-      const { title, description, category, options, likeDislike } = req.body;
+      const { title, description, category, options} = req.body;
       const timestamp = new Date();
       const newSurvey = {
         title,
         description,
         category,
         options,
-        likeDislike,
-        like: 0, // Initialize like to 0
-        dislike: 0, // Initialize dislike to 0
+        like: 0, 
+        dislike: 0, 
         timestamp,
       };
       const result = await surveyCollection.insertOne(newSurvey);
       res.json({ insertedId: result.insertedId });
     });
+
+      app.put('/allSurveys/:id', async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) }
+        const update = { $inc: { total_votes: 1 } }
+        const result = await surveyCollection.updateOne(filter, update);
+        res.send(result);
+      })
+
 
 
 
