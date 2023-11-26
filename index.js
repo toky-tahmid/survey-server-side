@@ -91,8 +91,21 @@ async function run() {
         const result = await surveyCollection.updateOne(filter, update);
         res.send(result);
       })
-
-
+      app.put("/dashboard/updateSurvey/:id", async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const option = { upsert: true };
+        const SurveyUpdate = req.body;
+        const update = {
+          $set: {
+            title: SurveyUpdate.title,
+            short_description: SurveyUpdate.short_description,
+            long_description: SurveyUpdate.long_description,
+          },
+        };
+        const result = await surveyCollection.updateOne(filter, update, option);
+        res.send(result);
+      });
 
 
     // Send a ping to confirm a successful connection
