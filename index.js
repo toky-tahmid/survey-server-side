@@ -69,15 +69,14 @@ async function run() {
       res.send(result);
     });
     app.post("/allSurveys", async (req, res) => {
-      const { title, description, category, options} = req.body;
-      const timestamp = new Date();
+      const { title, short_description,long_description, category, options} = req.body;
+      const timestamp = new Date().getTime();
       const newSurvey = {
         title,
-        description,
+        short_description,
+        long_description,
         category,
-        options,
-        like: 0, 
-        dislike: 0, 
+        options, 
         timestamp,
       };
       const result = await surveyCollection.insertOne(newSurvey);
@@ -91,6 +90,25 @@ async function run() {
         const result = await surveyCollection.updateOne(filter, update);
         res.send(result);
       })
+      
+      app.post('/api/add-review', async (req, res) => {
+        try {
+          const { review_id, reviews } = req.body;
+          const result = await surveyCollection.updateOne(
+            { _id: new ObjectId(review_id) },
+            { $push: { reviews: { $each: reviews } } }  
+          );
+          res.status(200).json({ success: true, message: 'Review added successfully' });
+        } catch (error) {
+          console.error('Error adding review:', error);
+          res.status(500).json({ success: false, message: 'Error adding review' });
+        }
+      });
+      
+
+
+
+
       app.put("/dashboard/updateSurvey/:id", async (req, res) => {
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) };
