@@ -39,6 +39,8 @@ async function run() {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
+
+
     app.patch("/users", async (req, res) => {
       const role = req.query.role;
       const id = req.query.id;
@@ -51,6 +53,7 @@ async function run() {
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
+    
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
@@ -82,6 +85,7 @@ async function run() {
       const result = await surveyCollection.insertOne(newSurvey);
       res.json({ insertedId: result.insertedId });
     });
+    
 
       app.put('/allSurveys/:id', async (req, res) => {
         const id = req.params.id;
@@ -104,11 +108,6 @@ async function run() {
           res.status(500).json({ success: false, message: 'Error adding review' });
         }
       });
-      
-
-
-
-
       app.put("/dashboard/updateSurvey/:id", async (req, res) => {
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) };
