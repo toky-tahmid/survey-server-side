@@ -7,6 +7,7 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use(express.json());
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.khqul4z.mongodb.net/?retryWrites=true&w=majority`;
@@ -25,6 +26,30 @@ async function run() {
     await client.connect();
     const surveyCollection = client.db("survey").collection("allSurveys");
     const userCollection = client.db("survey").collection("users");
+
+
+
+    //payments
+    app.post("/create-payment-intent", async (req, res) => {
+      try {
+        const { paymentMethodId } = req.body;
+        const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+    
+        const paymentIntent = await stripe.paymentIntents.create({
+          payment_method: paymentMethod.id,
+          amount: 3900,
+          currency: "usd",
+          confirmation_method: "manual",
+          confirm: true,
+          return_url: "http://localhost:5000/success"
+        });
+        res.json({ clientSecret: paymentIntent.client_secret });
+      } catch (error) {
+        console.error('Error creating payment intent:', error);
+        res.status(500).send({ error: 'Failed to create payment intent' });
+      }
+    });
+    
     //jwt
     app.post("/jwt", async (req, res) => {
       const user = req.body;
