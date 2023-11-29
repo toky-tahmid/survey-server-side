@@ -37,23 +37,6 @@ async function run() {
       });
       res.send({ token });
     });
-    // app.post('/user/updateRole', async (req, res) => {
-    //   try {
-    //     const { userId, newRole } = req.body;
-    //     console.log(userId);
-    //     const filter = { _id: new ObjectId(userId) };
-    //     const update = { $set: { role: 'proUser' } };
-    //     const result = await client.db('survey').collection('users').updateOne(filter, update);
-    //     console.log(result);
-    //     if (result.modifiedCount > 0) {
-    //       res.json({ success: true, message: 'User role updated successfully.' });
-    //     } else {
-    //       res.status(404).json({ success: false, message: 'User not found or role not updated.' });}
-    //   } catch (error) {
-    //     console.error('Error updating user role:', error);
-    //     res.status(500).json({ success: false, error: 'Internal Server Error' });
-    //   }
-    // });
     app.put('/users', async(req, res) => {
       let query = {};
       let updatedUser = {}
@@ -75,8 +58,10 @@ async function run() {
       res.send(result);
       console.log(user);
     });
-    app.get("/manual", async (req, res) => {
-      const result = await manualPaymentCollection.find().toArray();
+
+
+    app.get("/payments", async (req, res) => {
+      const result = await paymentCollection.find().toArray();
       res.send(result);
     });
 
@@ -116,8 +101,41 @@ async function run() {
       const result = await surveyCollection.findOne(query);
       res.send(result);
     });
+
+
+    app.get('/pendingSurvey', async (req, res) => {
+      let query = {}
+      if (req.query?.pending) {
+          query = { pending: req.query.pending }
+      }
+      const result = await surveyCollection.find(query).toArray();
+      res.send(result)
+  })
+    app.get('/publisedSurvey', async (req, res) => {
+      let query = {}
+      if (req.query?.pending) {
+          query = { pending: req.query.pending }
+      }
+      const result = await surveyCollection.find(query).toArray();
+      res.send(result)
+  })
+
+  app.patch("/user", async (req, res) => {
+    // const trainer = req.query.role;
+    const id = req.query.id;
+    const filter = { _id: new ObjectId(id) };
+    const updatedDoc = {
+        $set: {
+          pending: "Publish",
+        },
+    };
+    const result = await surveyCollection.updateOne(filter, updatedDoc);
+    res.send(result);
+});
+
+
     app.post("/allSurveys", async (req, res) => {
-      const { title, short_description, long_description, category, options } =
+      const { title, short_description, long_description, category, pending } =
         req.body;
       const timestamp = new Date().getTime();
       const newSurvey = {
@@ -125,8 +143,8 @@ async function run() {
         short_description,
         long_description,
         category,
-        options,
         timestamp,
+        pending
       };
       const result = await surveyCollection.insertOne(newSurvey);
       res.json({ insertedId: result.insertedId });
@@ -189,26 +207,7 @@ async function run() {
       })
     });
 
-    // app.post("/create-payment-intent", async (req, res) => {
-    //   try {
-    //     const { paymentMethodId } = req.body;
-    //     const paymentMethod = await stripe.paymentMethods.retrieve(
-    //       paymentMethodId
-    //     );
-    //     const paymentIntent = await stripe.paymentIntents.create({
-    //       payment_method: paymentMethod.id,
-    //       amount: 3900,
-    //       currency: "usd",
-    //       confirmation_method: "manual",
-    //       confirm: true,
-    //     });
-    //     res.json({ clientSecret: paymentIntent.client_secret });
-    //   } catch (error) {
-    //     console.error("Error creating payment intent:", error);
-    //     res.status(500).send({ error: "Failed to create payment intent" });
-    //   }
-    // });
-
+    
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
