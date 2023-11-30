@@ -11,7 +11,6 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.khqul4z.mongodb.net/?retryWrites=true&w=majority`;
-
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -23,12 +22,10 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-
+    // await client.connect();
     const surveyCollection = client.db("survey").collection("allSurveys");
     const userCollection = client.db("survey").collection("users");
     const paymentCollection = client.db("survey").collection("payments");
-
     //jwt
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -37,6 +34,7 @@ async function run() {
       });
       res.send({ token });
     });
+
     app.put('/users', async(req, res) => {
       let query = {};
       let updatedUser = {}
@@ -49,22 +47,17 @@ async function run() {
       const result = await userCollection.findOneAndUpdate(query, updatedUser);
       res.send(result);
     })
-    
     //payments
-    
     app.post("/payments", async (req, res) => {
       const user = req.body;
       const result = await paymentCollection.insertOne(user);
       res.send(result);
       console.log(user);
     });
-
-
     app.get("/payments", async (req, res) => {
       const result = await paymentCollection.find().toArray();
       res.send(result);
     });
-
     //users data
     app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
@@ -83,13 +76,11 @@ async function run() {
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
-
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
-
     //All surveys
     app.get("/allSurveys", async (req, res) => {
       const result = await surveyCollection.find().toArray();
@@ -101,8 +92,6 @@ async function run() {
       const result = await surveyCollection.findOne(query);
       res.send(result);
     });
-
-
     app.get('/pendingSurvey', async (req, res) => {
       let query = {}
       if (req.query?.pending) {
@@ -121,7 +110,6 @@ async function run() {
   })
 
   app.patch("/user", async (req, res) => {
-    // const trainer = req.query.role;
     const id = req.query.id;
     const filter = { _id: new ObjectId(id) };
     const updatedDoc = {
@@ -132,8 +120,6 @@ async function run() {
     const result = await surveyCollection.updateOne(filter, updatedDoc);
     res.send(result);
 });
-
-
     app.post("/allSurveys", async (req, res) => {
       const { title, short_description, long_description, category, pending } =
         req.body;
@@ -209,10 +195,10 @@ async function run() {
 
     
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
